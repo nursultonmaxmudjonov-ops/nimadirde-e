@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    cacheComponents: true,
-  partialPrefetching: true,q
+  cacheComponents: true,
+  partialPrefetching: true,
   /* config options here */
 };
 
