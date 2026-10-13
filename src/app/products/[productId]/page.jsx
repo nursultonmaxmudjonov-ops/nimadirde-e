@@ -1,38 +1,46 @@
-"use client";
-
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ProductDetailPage() {
-  const params = useParams();
-  const productId = params?.productId; // URL'dan bosilgan mahsulotning ID sini olish
+// 1. Dinamik Meta Taglar (Title va Description yaratish)
+export async function generateMetadata({ params }) {
+  const { productId } = await params;
+  
+  try {
+    const res = await fetch(`https://api.escuelajs.co/api/v1/products/${productId}`);
+    const product = await res.json();
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+    if (!product || !product.title) {
+      return {
+        title: "Mahsulot topilmadi",
+      };
+    }
 
-  useEffect(() => {
-    if (!productId) return;
+    return {
+      title: `${product.title} | Bizning Do'kon`,
+      description: product.description || "Mahsulot haqida batafsil ma'lumot",
+      openGraph: {
+        images: [product.images?.[0] || ''],
+      },
+    };
+  } catch (error) {
+    return {
+      title: "Mahsulot sahifasi",
+    };
+  }
+}
 
-    // Faqat o'sha bitta ID bo'yicha ma'lumot olish
-    fetch(`https://api.escuelajs.co/api/v1/products/${productId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProduct(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Xatolik:", err);
-        setLoading(false);
-      });
-  }, [productId]);
+// 2. Asosiy Sahifa (Server Component)
+export default async function ProductDetailPage({ params }) {
+  const { productId } = await params;
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-lg font-medium text-gray-500 animate-pulse">Mahsulot yuklanmoqda...</p>
-      </div>
-    );
+  let product = null;
+  
+  try {
+    const res = await fetch(`https://api.escuelajs.co/api/v1/products/${productId}`);
+    if (res.ok) {
+      product = await res.json();
+    }
+  } catch (err) {
+    console.error("Xatolik:", err);
   }
 
   if (!product || !product.id) {
@@ -56,7 +64,7 @@ export default function ProductDetailPage() {
         ← Orqaga qaytish
       </Link>
 
-      {/* Faqat o'sha bitta bosilgan mahsulotning to'liq kartasi */}
+      {/* Mahsulot kartasi */}
       <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           
@@ -66,7 +74,6 @@ export default function ProductDetailPage() {
               src={product.images?.[0]} 
               alt={product.title} 
               className="w-full h-80 object-cover rounded-2xl shadow-md"
-              onError={(e) => { e.target.src = "https://via.placeholder.com/400"; }}
             />
           </div>
 
