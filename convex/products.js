@@ -1,12 +1,10 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-// 1. Генерация URL для загрузки файла
 export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
 });
 
-// 2. Получение списка продуктов с URL картинок
 export const getProducts = query({
   args: {},
   handler: async (ctx) => {
@@ -21,7 +19,6 @@ export const getProducts = query({
   },
 });
 
-// 3. Добавление нового продукта
 export const addProduct = mutation({
   args: {
     title: v.string(),
@@ -36,5 +33,13 @@ export const addProduct = mutation({
       imageId: args.imageId,
       description: args.description,
     });
+  },
+});
+
+// Yangi: Mahsulotni o'chirish funksiyasi
+export const deleteProduct = mutation({
+  args: { id: v.id("products") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
   },
 });

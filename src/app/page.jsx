@@ -1,122 +1,33 @@
 // src/app/page.jsx
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+import Link from "next/link";
 
-export default function ProductsPage() {
+export default function HomePage() {
   const products = useQuery(api.products.getProducts);
-  const generateUploadUrl = useMutation(api.products.generateUploadUrl);
-  const addProduct = useMutation(api.products.addProduct);
-
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!title || !price || !selectedFile) {
-      alert("Iltimos, barcha maydonlarni to'ldiring va rasm tanlang!");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // 1. Convex dan yuklash uchun maxsus URL olamiz
-      const postUrl = await generateUploadUrl();
-
-      // 2. Rasmni Convex Storage ga yuklaymiz
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": selectedFile.type },
-        body: selectedFile,
-      });
-      const { storageId } = await result.json();
-
-      // 3. Mahsulot ma'lumotlarini bazaga saqlaymiz
-      await addProduct({
-        title,
-        price: Number(price),
-        imageId: storageId,
-        description,
-      });
-
-      // Formalarni tozalash
-      setTitle("");
-      setPrice("");
-      setDescription("");
-      setSelectedFile(null);
-    } catch (error) {
-      console.error("Xatolik yuz berdi:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <main className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        💻 Noutbuklar Do'koni (File Upload)
-      </h1>
-
-      {/* Mahsulot qo'shish formasi */}
-      <div className="bg-slate-800 text-white p-6 rounded-xl shadow-md mb-12 max-w-xl mx-auto">
-        <h2 className="text-xl font-semibold mb-4">Yangi Noutbuk Qo'shish</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Noutbuk nomi (masalan: ASUS ROG Strix)"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="p-2 rounded bg-slate-700 border border-slate-600 text-white outline-none"
-          />
-          <input
-            type="number"
-            placeholder="Narxi ($)"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="p-2 rounded bg-slate-700 border border-slate-600 text-white outline-none"
-          />
-          
-          {/* Kompyuterdan rasm tanlash */}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-gray-300">Noutbuk rasmini tanlang:</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="p-2 rounded bg-slate-700 border border-slate-600 text-white file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-            />
-          </div>
-
-          <textarea
-            placeholder="Tavsifi..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="p-2 rounded bg-slate-700 border border-slate-600 text-white outline-none h-20"
-          />
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium p-2 rounded transition disabled:opacity-50"
-          >
-            {loading ? "Yuklanmoqda..." : "Qo'shish"}
-          </button>
-        </form>
+      {/* Yuqori qism (Navigatsiya) */}
+      <div className="flex justify-between items-center mb-10">
+        <h1 className="text-3xl font-bold">💻 Noutbuklar Do'koni</h1>
+        <Link
+          href="/admin"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow"
+        >
+          ⚙️ Admin Panel
+        </Link>
       </div>
 
-      {/* Mahsulotlarni Card ko'rinishida chiqarish */}
-      <h2 className="text-2xl font-bold mb-6">Mavjud Noutbuklar</h2>
+      {/* Noutbuklar Cardlari */}
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Mavjud Noutbuklar</h2>
 
       {products === undefined ? (
-        <p className="text-gray-400">Yuklanmoqda...</p>
+        <p className="text-gray-500">Yuklanmoqda...</p>
       ) : products.length === 0 ? (
-        <p className="text-gray-400">Hozircha noutbuklar qo'shilmagan.</p>
+        <p className="text-gray-500">Hozircha noutbuklar qo'shilmagan.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((item) => (
