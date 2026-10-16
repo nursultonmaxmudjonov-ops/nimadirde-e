@@ -1,30 +1,43 @@
-import { query, mutation } from "./_generated/server";
+// convex/products.js
+v
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-export const generateUploadUrl = mutation(async (ctx) => {
-  return await ctx.storage.generateUploadUrl();
-});
-
+// Mahsulotlarni olish
 export const getProducts = query({
   args: {},
   handler: async (ctx) => {
-    const products = await ctx.db.query("products").order("desc").collect();
+    const products = await ctx.db.query("products").collect();
     
+    // Har bir mahsulot uchun rasm URL manzilini biriktirish
     return Promise.all(
       products.map(async (product) => {
-        const imageUrl = await ctx.storage.getUrl(product.imageId);
+        let imageUrl = null;
+        if (product.imageId) {
+          imageUrl = await ctx.storage.getUrl(product.imageId);
+        }
         return { ...product, imageUrl };
       })
     );
   },
 });
 
+// Rasm yuklash uchun URL yaratish
+export const generateUploadUrl = mutation(async (ctx) => {
+  return await ctx.storage.generateUploadUrl();
+});
+
+// Yangi mahsulot qo'shish
 export const addProduct = mutation({
   args: {
     title: v.string(),
     price: v.number(),
-    imageId: v.string(),
+    imageId: v.optional(v.id("_storage")),
     description: v.string(),
+    processor: v.string(),
+    ram: v.string(),
+    storage: v.string(),
+    gpu: v.string(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("products", {
@@ -32,14 +45,18 @@ export const addProduct = mutation({
       price: args.price,
       imageId: args.imageId,
       description: args.description,
+      processor: args.processor,
+      ram: args.ram,
+      storage: args.storage,
+      gpu: args.gpu,
     });
   },
 });
 
-// Yangi: Mahsulotni o'chirish funksiyasi
+// Mahsulotni o'chirish
 export const deleteProduct = mutation({
   args: { id: v.id("products") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
-});
+}); 

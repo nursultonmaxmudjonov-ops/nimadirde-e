@@ -40,21 +40,26 @@ export default function AdminPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !price || !selectedFile) {
-      alert("Iltimos, Noutbuk nomi, narxi va rasmini kiriting!");
+    if (!title || !price) {
+      alert("Iltimos, Noutbuk nomi va narxini kiriting!");
       return;
     }
 
     try {
       setLoading(true);
-      const postUrl = await generateUploadUrl();
+      let storageId = undefined;
 
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": selectedFile.type },
-        body: selectedFile,
-      });
-      const { storageId } = await result.json();
+      // Agar rasm tanlangan bo'lsa, uni yuklab ko'ramiz
+      if (selectedFile) {
+        const postUrl = await generateUploadUrl();
+        const result = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": selectedFile.type },
+          body: selectedFile,
+        });
+        const json = await result.json();
+        storageId = json.storageId;
+      }
 
       await addProduct({
         title,
@@ -77,7 +82,8 @@ export default function AdminPage() {
       setSelectedFile(null);
       alert("Noutbuk muvaffaqiyatli qo'shildi!");
     } catch (error) {
-      console.error("Xatolik:", error);
+      console.error("Xatolik tafsiloti:", error);
+      alert("Xatolik yuz berdi: " + error.message);
     } finally {
       setLoading(false);
     }
